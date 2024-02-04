@@ -1,11 +1,16 @@
 // next[j] means: when 0~j-1 match but j doesn't, then j = next[j];
+// next[j] also means: pattern[0:j-1] has next[j] length of longest prefix and suffix
+//                                                   (pattern[0:next[j]-1]  ==  pattern[j-next[j]:j-1])
+// i       = 01234567 
+// pattern = abcabca
+// next_j = -10001234
 void init_next(const string& pattern, vector<int>& next)
 {
     int j = -1;
-    next.resize(pattern.size()+2);
+    next.resize(pattern.size()+1);
     next[0] = -1;
     int i = 0;
-    for (int i = 0; i <= pattern.size(); ++i) {
+    for (int i = 0; i < pattern.size(); ++i) {
         while (j != -1 && pattern[i] != pattern[j]) j = next[j];
         next[i+1] = ++j;
     }
