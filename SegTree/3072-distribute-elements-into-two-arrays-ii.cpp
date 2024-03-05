@@ -2,59 +2,69 @@ class SegTree {
 public:
     SegTree *left;
     SegTree *right;
-    int l;
-    int r;
-    int value;
-    SegTree(int a, int b, int v) {
+    long long l;
+    long long r;
+    long long value;
+    long long lazy;
+    SegTree(long long a, long long b, long long v) {
         left = NULL;
         right = NULL;
         l = a;
         r = b;
         value = v;
+        lazy = 0;
     }
     
-    // update value+1 at v
-    void update(int v) {
-        int mid = l + (r-l)/2;
-        //cout << l << ':' << r << endl;
-        if (left == NULL || right == NULL) {
+    // update value+1 of [a:b]
+    void update(long long a, long long b) {
+        if (l == a && r == b) {
             if (l == r) {
-                value++;
+                value = (value + 1);
             } else {
-                left = new SegTree(l, mid, value);
-                right = new SegTree(mid+1, r, value);
-                if (v <= mid) {
-                    left->update(v);
-                } else {
-                    right->update(v);
-                }
-                value++;
+                lazy = (lazy + 1);
             }
-        } else {
-            int mid = left->r;
-            if (v <= mid) {
-                left->update(v);
-            } else {
-                right->update(v);
-            }
-            value++;
+            return;
         }
+        //cout << l << 'x' << r << endl;
+        long long mid = l + (r-l)/2;
+        if (left == NULL || right == NULL) {
+            left = new SegTree(l, mid, value);
+            left->lazy = lazy;
+            right = new SegTree(mid+1, r, value);
+            right->lazy = lazy;
+        }
+        value = (value + (b - a + 1));
+        if (b <= mid) return left->update(a, b);
+        if (a > mid) return right->update(a, b);
+        left->update(a, mid);
+        right->update(mid+1, b);
     }
     
     // query sum value of [a:b]
-    int query(int a, int b) {
-        if (l == a && r == b) return value;
-        int mid = l + (r-l)/2;
+    long long query(long long a, long long b) {
+        if (l == a && r == b) {
+            long long x = (r-l+1);
+            x *= lazy;
+            return (value + x);
+        }
+        long long mid = l + (r-l)/2;
         if (left == NULL || right == NULL) {
             return value;
         } else {
-            if (b <= mid) {
-                return left->query(a,b);
-            } else if (a > mid) {
-                return right->query(a,b);
-            } else {
-                return left->query(a,mid) + right->query(mid+1,b);
+            if (lazy > 0) {
+                left->lazy = (left->lazy + lazy);
+                right->lazy = (right->lazy + lazy);
+                long long x = (r-l+1);
+                x *= lazy;
+                value = (value + x);
+                lazy = 0;
             }
+            if (b <= mid) return left->query(a,b);
+            if (a > mid) return right->query(a,b);
+            long long ret = 0;
+            ret = (ret + left->query(a,mid));
+            ret = (ret + right->query(mid+1,b));
+            return ret;
         }
     }
 };
@@ -62,30 +72,33 @@ public:
 class Solution {
 public:
     vector<int> resultArray(vector<int>& nums) {
-        SegTree *rootA = new SegTree(1, 1e9+1, 0);
-        SegTree *rootB = new SegTree(1, 1e9+1, 0);
-        rootA->update(nums[0]);
-        rootB->update(nums[1]);
+        int mx = 0;
+        for (auto& v : nums) mx = max(mx, v);
+        mx++;
+        SegTree *rootA = new SegTree(1, mx, 0);
+        SegTree *rootB = new SegTree(1, mx, 0);
+        rootA->update(nums[0],nums[0]);
+        rootB->update(nums[1],nums[1]);
         vector<int> arr1(1, nums[0]);
         vector<int> arr2(1, nums[1]);
         for (int i = 2; i < nums.size(); ++i) {
             int v = nums[i];
-            int sa = rootA->query(v+1, 1e9+1);
-            int sb = rootB->query(v+1, 1e9+1);
+            int sa = rootA->query(v+1, mx);
+            int sb = rootB->query(v+1, mx);
             //cout << sa << ',' << sb << endl;
             if (sa > sb) {
                 arr1.push_back(v);
-                rootA->update(v);
+                rootA->update(v,v);
             } else if (sa < sb) {
                 arr2.push_back(v);
-                rootB->update(v);
+                rootB->update(v,v);
             } else {
                 if (arr1.size() <= arr2.size()) {
                     arr1.push_back(v);
-                    rootA->update(v);
+                    rootA->update(v,v);
                 } else {
                     arr2.push_back(v);
-                    rootB->update(v);
+                    rootB->update(v,v);
                 }
             }
         }
