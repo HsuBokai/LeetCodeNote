@@ -6,12 +6,12 @@ public:
     long long r;
     long long value;
     long long lazy;
-    SegTree(long long a, long long b, long long v) {
+    SegTree(long long a, long long b) {
         left = NULL;
         right = NULL;
         l = a;
         r = b;
-        value = v;
+        value = 0;
         lazy = 0;
     }
     
@@ -28,9 +28,9 @@ public:
         //cout << l << 'x' << r << endl;
         long long mid = l + (r-l)/2;
         if (left == NULL || right == NULL) {
-            left = new SegTree(l, mid, value);
+            left = new SegTree(l, mid);
             left->lazy = lazy;
-            right = new SegTree(mid+1, r, value);
+            right = new SegTree(mid+1, r);
             right->lazy = lazy;
         }
         value = (value + (b - a + 1));
@@ -49,7 +49,7 @@ public:
         }
         long long mid = l + (r-l)/2;
         if (left == NULL || right == NULL) {
-            return value;
+            return 0;
         } else {
             if (lazy > 0) {
                 left->lazy = (left->lazy + lazy);
@@ -75,8 +75,8 @@ public:
         int mx = 0;
         for (auto& v : nums) mx = max(mx, v);
         mx++;
-        SegTree *rootA = new SegTree(1, mx, 0);
-        SegTree *rootB = new SegTree(1, mx, 0);
+        SegTree *rootA = new SegTree(1, mx);
+        SegTree *rootB = new SegTree(1, mx);
         rootA->update(nums[0],nums[0]);
         rootB->update(nums[1],nums[1]);
         vector<int> arr1(1, nums[0]);
